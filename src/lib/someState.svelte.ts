@@ -6,11 +6,25 @@ interface Data {
 	pokemon: string;
 }
 
+interface PokemonType {
+	slot: number;
+	type: {
+		name: string;
+		url: string;
+	};
+}
+
 interface Pokemon {
 	height: number;
 	weight: number;
 	order: number;
 	name: string;
+	types: PokemonType[];
+}
+
+interface Filter {
+	weight: number;
+	types: string[];
 }
 
 const fetchResource = async (pokemon: string): Promise<Pokemon> => {
@@ -30,6 +44,7 @@ const loadData = async (someState: SomeStateClass) => {
 	for (let i = 0; i < someState.rawData.length; i++) {
 		const rd = someState.rawData[i]; //.map(async (rd) => {
 		const p = await fetchResource(rd.pokemon);
+		console.log(p);
 		someState.fetchedData.push(p);
 		done++;
 		if (done == someState.rawData.length) {
@@ -41,13 +56,35 @@ const loadData = async (someState: SomeStateClass) => {
 
 class SomeStateClass {
 	public rawData: Data[] = $state([]);
-
+	public filter: Filter = $state({
+		weight: 49,
+		types: ['poison', 'grass', 'bug', 'electric', 'normal']
+	});
 	public loading: boolean = $state(false);
 	public fetchedData: Pokemon[] = $state([]);
 	public loaded: boolean = $state(false);
+	public filteredPokemon: Pokemon[] = $derived(
+		this.fetchedData.filter((p) => {
+			let matchingType = false;
+			for (let i = 0; i < p.types.length; i++) {
+				if (this.filter.types.includes(p.types[i].type.name)) {
+					matchingType = true;
+					break;
+				}
+			}
+
+			return p.weight > this.filter.weight && matchingType;
+		})
+	);
 	public totalMass: number = $derived(
 		this.fetchedData.reduce((s, r) => {
-			s += r.weight;
+			s += r.weight; // * this.factor;
+			return s;
+		}, 0)
+	);
+	public filteredTotalMass: number = $derived(
+		this.filteredPokemon.reduce((s, r) => {
+			s += r.weight; // * this.factor;
 			return s;
 		}, 0)
 	);

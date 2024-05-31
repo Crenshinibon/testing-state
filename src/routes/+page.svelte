@@ -1,9 +1,22 @@
-<script>
+<script lang="ts">
 	import Counter from './Counter.svelte';
 	import welcome from '$lib/images/svelte-welcome.webp';
 	import welcome_fallback from '$lib/images/svelte-welcome.png';
 
 	import { someState } from '$lib/someState.svelte';
+
+	//let factor = $state(1);
+
+	const changeTypeFilter = (t: string) => {
+		return () => {
+			const index = someState.filter.types.indexOf(t);
+			if (index > -1) {
+				someState.filter.types.splice(index, 1);
+			} else {
+				someState.filter.types.push(t);
+			}
+		};
+	};
 </script>
 
 <svelte:head>
@@ -18,12 +31,65 @@
 	<h1>
 		{#if someState.loaded}LOADED{/if}
 	</h1>
-	<h2>Pokemon (total mass: {someState.totalMass})</h2>
+	<div>
+		<h3>Filter</h3>
+		<label>Weight:<input type="number" bind:value={someState.filter.weight} /></label>
+		<h4>Types:</h4>
+		<div>
+			<label
+				>electric<input
+					type="checkbox"
+					checked={someState.filter.types.includes('electric')}
+					onchange={changeTypeFilter('electric')}
+				/>
+			</label>
+			<label
+				>normal<input
+					type="checkbox"
+					checked={someState.filter.types.includes('normal')}
+					onchange={changeTypeFilter('normal')}
+				/></label
+			>
+			<label
+				>grass<input
+					type="checkbox"
+					checked={someState.filter.types.includes('grass')}
+					onchange={changeTypeFilter('grass')}
+				/></label
+			>
+			<label
+				>poison<input
+					type="checkbox"
+					checked={someState.filter.types.includes('poison')}
+					onchange={changeTypeFilter('poison')}
+				/></label
+			>
+			<label
+				>bug<input
+					type="checkbox"
+					checked={someState.filter.types.includes('bug')}
+					onchange={changeTypeFilter('bug')}
+				/></label
+			>
+		</div>
+	</div>
+	<h1>All Pokemon (total mass: {someState.totalMass})</h1>
 	<ul>
 		{#each someState.fetchedData as p}
+			<li>
+				{p.name} - weighs {p.weight} - (types: {p.types.reduce((s, t) => {
+					return (s += t.type.name + ', ');
+				}, '')})
+			</li>
+		{/each}
+	</ul>
+	<h1>Filtered Pokemon (total mass: {someState.filteredTotalMass})</h1>
+	<ul>
+		{#each someState.filteredPokemon as p}
 			<li>{p.name} - weighs {p.weight}</li>
 		{/each}
 	</ul>
+
 	<h1>
 		<span class="welcome">
 			<picture>
